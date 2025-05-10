@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <title>لیست کارها</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>لیست کارها 📝</h1>
+        <form id="taskForm">
+            <input type="text" id="taskInput" placeholder="کار جدید بنویس..." required>
+            <button type="submit">➕ افزودن</button>
+        </form>
+        <ul id="taskList"></ul>
+    </div>
+
+    <script>
+        const taskList = document.getElementById("taskList");
+        const taskForm = document.getElementById("taskForm");
+        const taskInput = document.getElementById("taskInput");
+
+        async function fetchTasks() {
+            const res = await fetch("/tasks");
+            const tasks = await res.json();
+            taskList.innerHTML = "";
+            tasks.forEach(task => {
+                const li = document.createElement("li");
+                li.textContent = task.title;
+                const btn = document.createElement("button");
+                btn.textContent = "❌";
+                btn.onclick = () => deleteTask(task.id);
+                li.appendChild(btn);
+                taskList.appendChild(li);
+            });
+        }
+
+        async function addTask(e) {
+            e.preventDefault();
+            const title = taskInput.value;
+            if (!title) return;
+            await fetch("/tasks", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ title })
+            });
+            taskInput.value = "";
+            fetchTasks();
+        }
+
+        async function deleteTask(id) {
+            await fetch(`/tasks/${id}`, { method: "DELETE" });
+            fetchTasks();
+        }
+
+        taskForm.onsubmit = addTask;
+        fetchTasks();
+    </script>
+</body>
+</html>
